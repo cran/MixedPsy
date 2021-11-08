@@ -2,27 +2,38 @@
 % Please edit documentation in R/psych_utils.R
 \name{PsychShape}
 \alias{PsychShape}
-\title{Plotting Psychometric Functions given PSE and JND}
+\title{Plot Psychometric Functions given PSE and JND}
 \usage{
-PsychShape(pse = 0, jnd, x.range = c(NA, NA), ps.link = "probit",
-  ps.col = "black", ps.lwd = 1, ps.lty = "solid")
+PsychShape(
+  pse = 0,
+  jnd = 1,
+  p = 0.75,
+  x.range = c(NA, NA),
+  ps.link = c("probit"),
+  ps.type = "solid",
+  ps.size = 1,
+  ps.color = "black",
+  addTo = NULL
+)
 }
 \arguments{
-\item{pse, jnd}{the pse and the jnd of the desired psychometric function}
+\item{pse, jnd}{point of subjective equivalende (PSE) and just noticeable difference (JND) of the desired psychometric function.}
 
-\item{x.range}{a vector of length two specifying the range of the function}
+\item{p}{probability value relative to the JND upper limit. Default is 0.75 (value for 50\% JND).}
 
-\item{ps.link}{a link function for the binomial family of error distribution (see Details).}
+\item{x.range}{vector of length two specifying the range of the psychometric function.}
 
-\item{ps.col}{color of the line to be plotted}
+\item{ps.link}{a link function for the binomial family of error distribution.}
 
-\item{ps.lwd}{line width}
+\item{ps.type, ps.size, ps.color}{type, size, and color of the plotted line (see \code{"ggplot2-spec"}).}
 
-\item{ps.lty}{line type}
+\item{addTo}{specifies an existing \code{ggplot} object where the new line should be plotted. If no object is given, the function is drawn on a new plot.}
+}
+\value{
+\code{PsychShape} returns a \code{\link[ggplot2]{ggplot}} object.
 }
 \description{
-\code{PsychShape()} plots a psychometric function with known pse and jnd
-on an existing plot.
+Plot a psychometric function with known PSE and JND on a new or existing \code{ggplot} object.
 }
 \details{
 \code{PsychShape()} can be used to visualize the predicted results of a
@@ -31,23 +42,24 @@ values of pse and jnd are known. Currently only working with probit and logit
 link function.
 }
 \examples{
-y = c(0,1)
-x = c(-40, 40)
-plot(y ~ x, type = "n", bty = "n", lab = c(5,3,7))
-PsychShape(pse = 0, jnd = 6, x.range = c(-40, 40), ps.col = "gray", ps.lwd = 3)
-PsychShape(pse = 6, jnd = 6, x.range = c(-40, 40), ps.col = "black")
-PsychShape(pse = 6, jnd = 6, x.range = c(-40, 40), ps.col = "red", ps.link = "logit", ps.lwd = 3)
+p <- PsychShape(pse = 0, jnd = 6, x.range = c(-40, 40), ps.color = "gray", ps.size = 3)
+p1 <- PsychShape(pse = 6, jnd = 6, x.range = c(-40, 40), ps.col = "black", addTo = p)
+p2 <- PsychShape(pse = 6, jnd = 6, x.range = c(-40, 40), ps.col = "red", ps.link = "logit", 
+ps.type = "dashed", addTo = NULL)
 
 }
 \references{
 Moscatelli, A., Mezzetti, M., & Lacquaniti, F. (2012). Modeling psychophysical data 
 at the population-level: The generalized linear mixed model. 
-Journal of Vision, 12(11):26, 1-17. https://doi.org/10.1167/12.11.26
+Journal of Vision, 12(11):26, 1-17. doi:10.1167/12.11.26
 
 Knoblauch, K., & Maloney, L. T. (2012). Modeling psychophysical data in R (Vol. 32). 
 Springer Science & Business Media.
 }
 \seealso{
 \code{\link[stats]{glm}} for for Generalized Linear Models.
-\code{\link{PsychFunction}} for estimation of PSE and JND.
+\code{\link{PsychFunction}} and \code{\link{PsychDelta}} for estimation of PSE and JND from response data.
+\code{\link{PsychPlot}} for plotting a a psychometric function from a GLM.
 }
+\keyword{GLM}
+\keyword{plot}

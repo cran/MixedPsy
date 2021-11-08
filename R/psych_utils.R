@@ -1,19 +1,20 @@
-#' PSE/JND for univariable GLM Using Delta Method
+#' PSE/JND from GLM Using Delta Method
 #'
-#' Estimate the Point of Subjective Equivalence (PSE), the Just Noticeable
-#' Difference (JND) and the related Standard Errors by means of Delta Method.
-#' The method only applies to univariable GLMs (psychometric functions) having
-#' a \emph{probit} link function.
+#' Estimate Point of Subjective Equivalence (PSE), Just Noticeable
+#' Difference (JND), and related Standard Errors of an individual participant 
+#' by means of Delta Method.
+#' The method only applies to a GLM (object of class \code{\link[stats]{glm}}) with one continuous 
+#' predictor and a \emph{probit} link function.
 #'
-#'
-#' @param model the fitted psychometric function. An object of class \code{"glm"}.
-#' @param alpha significance level of the confidence interval.
-#'
-#' @details \code{PsychDelta} estimates PSE and JND of a univariable psychometric
-#' function (object of class \code{"glm"}).
+#' @param model.obj the fitted psychometric function. An object of class \code{\link[stats]{glm}}.
+#' @param alpha significance level of the confidence interval.Default is 0.05 (95\% confidence interval).
+#' @param p probability value relative to the JND upper limit. Default is 0.75 (value for 50\% JND).
 #' 
-#' @return \code{PsychDelta} returns a matrix including Estimate, Standard Error,
-#' Inferior and Superior Confidence Interval of PSE and JND. Confidence Intervals
+#' @details \code{PsychDelta} estimates PSE and JND of a psychometric
+#' function (object of class \code{glm}).
+#' 
+#' @return \code{PsychDelta} returns a matrix including estimate, standard error,
+#' inferior and superior bounds of the confidence interval of PSE and JND. Confidence Intervals
 #' are computed as: \eqn{Estimate +/- z(1-(\alpha/2)) * Std.Error}.
 #'
 #' @note The function assumes that the first model coefficient is the intercept
@@ -23,46 +24,45 @@
 #' @references
 #' Faraggi, D., Izikson, P., & Reiser, B. (2003). Confidence intervals for the 50 per cent 
 #' response dose. Statistics in medicine, 22(12), 1977-1988. https://doi.org/10.1002/sim.1368
+#' 
+#' Knoblauch, K., & Maloney, L. T. (2012). Modeling psychophysical data in R (Vol. 32). 
+#' Springer Science & Business Media.
 #'
 #' Moscatelli, A., Mezzetti, M., & Lacquaniti, F. (2012). Modeling psychophysical data 
 #' at the population-level: The generalized linear mixed model. 
-#' Journal of Vision, 12(11):26, 1-17. https://doi.org/10.1167/12.11.26
+#' Journal of Vision, 12(11):26, 1-17. doi:10.1167/12.11.26
 #'
-#' @seealso \code{\link[stats]{glm}} for for Generalized Linear Models (without
-#' random effects) and \code{\link[lme4]{glmer}} for Generalized Linear Mixed
-#' Models (including random effects). \code{MixDelta} and \code{MixTreatment}
-#' for univarible and multivariable GLMM, respectively (object of class
-#' \code{"\linkS4class{merMod}"}). \code{\link{pseMer}} for bootstrap-based
-#' confidence intervals.
+#' @seealso \code{\link[stats]{glm}} for fitting a Generalized Linear Model to a single-subject response. \code{\link[lme4]{glmer}} 
+#' for Generalized Linear Mixed Models (including fixed and random effects). \code{MixDelta} for estimating PSE and JND at a population level 
+#' with delta method. 
 #' 
-#' @keywords Univariable GLM DeltaMethod
+#' @keywords DeltaMethod GLM 
 #'
 #' @examples
-#' #load simulated data
-#' data(simul_data)
-#' #fit a glm (probit link)
+#' data.S1 <- subset(simul_data, Subject == "S1")
 #' model.glm = glm(formula = cbind(Longer, Total - Longer) ~ X,
-#' family = binomial(link = "probit"), data = simul_data)
+#' family = binomial(link = "probit"), data = data.S1)
 #' PsychDelta(model.glm)
 #' 
-#' @importFrom stats vcov
+#' @importFrom stats vcov qnorm
+#' 
 #' @export
 #'
-PsychDelta <- function(model, alpha = 0.05) {
+PsychDelta <- function(model.obj, alpha = 0.05, p = 0.75) {
 
-    pse <- -model$coef[1]/model$coef[2]
-    BETA <- model$coef[2]
+    pse <- -model.obj$coef[1]/model.obj$coef[2]
+    BETA <- model.obj$coef[2]
 
-    var.alpha <- vcov(model)[1, 1]
-    var.beta <- vcov(model)[2, 2]
-    cov.alpha.beta <- vcov(model)[2, 1]
+    var.alpha <- vcov(model.obj)[1, 1]
+    var.beta <- vcov(model.obj)[2, 2]
+    cov.alpha.beta <- vcov(model.obj)[2, 1]
 
     var.pse <- (1/BETA^2) * (var.alpha + (2 * pse * cov.alpha.beta) + (pse^2 * var.beta))  #PSE
     inferior.pse <- pse - (qnorm(1 - (alpha/2)) * sqrt(var.pse))
     superior.pse <- pse + (qnorm(1 - (alpha/2)) * sqrt(var.pse))
 
-    jnd <- qnorm(0.75) * (1/BETA)
-    var.jnd <- (qnorm(0.75) * (-1/BETA^2))^2 * var.beta  #JND
+    jnd <- qnorm(p) * (1/BETA)
+    var.jnd <- (qnorm(p) * (-1/BETA^2))^2 * var.beta  #JND
     inferior.jnd <- jnd - (qnorm(1 - (alpha/2)) * sqrt(var.jnd))
     superior.jnd <- jnd + (qnorm(1 - (alpha/2)) * sqrt(var.jnd))
 
@@ -74,162 +74,228 @@ PsychDelta <- function(model, alpha = 0.05) {
 }
 
 
-#' Fitting and Plotting Psychometric Functions
+#' Psychometric Function and PSE/JND Parameters from Single-Subject Response
 #'
-#' Fit psychometric functions using either
-#' \code{glm()} or \code{brglm()}, estimate PSE, JND and the related
-#' confidence intervals, and draw the curve on an existing plot.
+#' Fit psychometric functions using \code{\link[stats]{glm}} or \code{\link[brglm]{brglm}}. 
+#' Estimate PSE, JND, and related confidence intervals with Delta Method. 
 #'
-#' @param ps.formula an object of class ``formula'', such as \code{cbind(yes, no) ~ X}
-#' @param ps.link a link function for the binomial family of error distribution.
-#' See `Details
-#' @param ps.data a data frame including the variables in the model
-#' @param ps.lines logical. If TRUE, model predictions and confidence intervals of
-#' the PSE will be added to an existing plot
-#' @param ps.x optionally, a data frame in which to look for variables with which
-#' to predict. See `Details'
-#' @param x.range a vector of length two specifying the range for model predictions
-#' @param ps.col color of the lines to be plotted
-#' @param ps.lty line type
-#' @param ps.lwd line width
-#' @param br  logical. If TRUE, brglm is used if fitted values are equal to 0 or 1
+#' @param ps.formula an object of class \code{\link[stats]{formula}}, such as \code{cbind(yes, no) ~ X}
+#' @param ps.link link function for the binomial family of error distribution. Default is \code{probit}.
+#' @param ps.data a data frame including the variables used in the model.
+#' @param br  logical. If TRUE, \code{\link[brglm]{brglm}} for bias reduction is used if values are equal to 0 or 1. 
+#' Default is FALSE.
 #'
-#' @details If \code{lines = TRUE}, the function draws model predictions on an existing plot.
-#' Only for univariable glm of the type \code{F(Y) ~ X}, where X is a continuous
-#' predictor. If \code{ps.x} is empty, the new data frame is a vector of length = 1000,
-#' whose range is specified from \code{x.range}. Std. Errors and 95\% confidence intervals
-#' of the PSE and JND are estimated via Delta Methods, see Faraggi et al. (2003).
+#' @details Estimates are computed only for GLM of the type \code{F(Y) ~ X}, where X is a continuous
+#' predictor. Std. Errors and 95\% confidence intervals of PSE and JND are estimated via Delta Methods. 
+#' Currently only working with \emph{probit} link function.
 #'
-#' @return a list including the fitted glm (or \code{brglm}),
-#' the estimate of PSE and JND and a flag to indicate if \code{brglm} was called.
+#' @return \code{PsychFunction} returns a list including the fitted model,
+#' the estimate of PSE and JND and a flag to indicate if \code{\link[brglm]{brglm}} was called.
 #'
+#' @note \code{PsychFunction} returns the same parameter estimate as \code{\link{PsychDelta}}, without an explicit call to \code{\link[stats]{glm}}. 
+#' Moreover, it allows to fit the model using \code{\link[brglm]{brglm}} in case of complete or quasi separation.
+#' 
 #' @references
 #' Faraggi, D., Izikson, P., & Reiser, B. (2003). Confidence intervals for the 50 per cent 
 #' response dose. Statistics in medicine, 22(12), 1977-1988. https://doi.org/10.1002/sim.1368
 #'
 #' Moscatelli, A., Mezzetti, M., & Lacquaniti, F. (2012). Modeling psychophysical data 
 #' at the population-level: The generalized linear mixed model. 
-#' Journal of Vision, 12(11):26, 1-17. https://doi.org/10.1167/12.11.26
+#' Journal of Vision, 12(11):26, 1-17. doi:10.1167/12.11.26
 #' 
-#' @seealso \code{\link[stats]{glm}} for for Generalized Linear Models.
-#' \code{\link{PsychShape}} for plotting psychometric function of given PSE and JND
+#' @seealso \code{\link[stats]{glm}} for Generalized Linear Models. 
+#' \code{\link[brglm]{brglm}} for fitting a GLM using bias reduction.
+#' \code{\link{PsychPlot}} for plotting a psychometric function given a \code{\link[stats]{glm}} (or \code{\link[brglm]{brglm}}) object.
+#' \code{\link{PsychPlot}} for plotting a a psychometric function from a GLM. 
+#' \code{\link{PsychShape}} for plotting a psychometric function given PSE and JND. 
 #' 
-#' @keywords Plotting Psychometric GLM DeltaMethod
+#' @keywords GLM DeltaMethod
 #'
 #' @examples
-#' # simulate data from a single participant
-#' datafr.S1 <- PsySimulate(fixeff = c(-7.5, 0.0875), nsubject = 1, constant = TRUE)
-#' #fit a glm (probit link)
-#' model.glm = glm(formula = cbind(Longer, Total - Longer) ~ X,
-#' family = binomial(link = "probit"), data = datafr.S1)
-#'
-#' #fit psychometric function single-subject data and draw on existing plot
-#' plot(Longer/Total ~ X, data = datafr.S1)
-#' fit.S1 = PsychFunction(ps.formula = cbind(Longer, Total - Longer) ~ X,
-#'                         ps.link = "probit", ps.data = datafr.S1,
-#'                         x.range = c(40, 120), ps.lines = TRUE)
+#' data.S1 <- subset(simul_data, Subject == "S1")
+#' psych.S1 <- PsychFunction(ps.formula = cbind(Longer, Total - Longer) ~ X, 
+#' ps.link = "probit", ps.data = data.S1)
 #'                         
 #' @importFrom brglm brglm
-#' @importFrom stats glm predict terms
-#' @importFrom graphics lines segments
+#' @importFrom stats terms glm binomial
 #' @export
 #'
-PsychFunction <- function(ps.formula, ps.link, ps.data, x.range = c(NA, NA), ps.x = NA, ps.lines = F,
-                          ps.col = "black", ps.lty = "dashed", ps.lwd = 1, br = F) {
-  myfit = vector("list", 3)
+PsychFunction <-  function (ps.formula, ps.link, ps.data, br = F) {
+  
+  myfit = list()
   ps.terms = terms(ps.formula)
-
-  model.glm = glm(formula = ps.formula, family = binomial(link = ps.link), data = ps.data)
-
+  model.glm = glm(formula = ps.formula, family = binomial(link = ps.link), 
+                  data = ps.data)
+  
   eps = 1e-15
-  brflag = ifelse(1-max(model.glm$fitted.values) <= eps & trunc(min(model.glm$fitted.values)) ==
-                    0, T, F)
-  myfit[[3]] = brflag
-
+  brflag = ifelse(1 - max(model.glm$fitted.values) <= eps & 
+                    trunc(min(model.glm$fitted.values)) == 0, T, F)
+  
   if (br == T & brflag == T) {
-    model.glm = brglm(formula = ps.formula, family = binomial(link = ps.link), data = ps.data)
+    model.glm = brglm(formula = ps.formula, family = binomial(link = ps.link), 
+                      data = ps.data)
     warning("Binomial-response GLMs fitted using the bias-reduction method (brglm)")
   }
-
-  myfit[[1]] = model.glm
-
+  
+  myfit$model = model.glm
+  
   if (ps.link == "probit") {
-    myfit[[2]] = PsychDelta(model.glm)
-    if (ps.lines == T) {
-      segments(x0 = myfit[[2]][1, 3], y0 = 0.5, x1 = myfit[[2]][1, 4], y1 = 0.5, col = ps.col,
-               lty = ps.lty, lwd = ps.lwd)
-    }
+    myfit$estimate = PsychDelta(model.glm)
   } else {
-    myfit[[2]] = NA
+    myfit$estimate = NA
     warning("Use the probit link function to get the estimate of the PSE and the JND")
   }
-
-  if (ps.lines == T) {
-    if (is.na(ps.x)) {
-      ps.x <- data.frame(seq(x.range[1], x.range[2], length.out = 1000))
-      names(ps.x) = attr(ps.terms, "term.labels")
-    }
-    lines(x = seq(x.range[1], x.range[2], length.out = 1000),
-          y = predict(object = model.glm, newdata = data.frame(ps.x), type = "response"),
-          col = ps.col, lty = ps.lty, lwd = ps.lwd)
-  }
+  
+  myfit$info <- list(brflag = brflag)
+  
   return(myfit)
 }
 
-#' Plotting Psychometric Functions given PSE and JND
+#' Plot Psychometric Function from GLM
 #'
-#' \code{PsychShape()} plots a psychometric function with known pse and jnd
-#' on an existing plot.
+#' Plot a psychometric function given an object of class \code{\link[stats]{glm}} or \code{\link[brglm]{brglm}}. 
+#' The plot can be drawn on a new or existing \code{ggplot} object.
 #'
-#' @param pse,jnd the pse and the jnd of the desired psychometric function
-#' @param ps.link a link function for the binomial family of error distribution (see Details).
-#' @param x.range a vector of length two specifying the range of the function
-#' @param ps.col color of the line to be plotted
-#' @param ps.lwd line width
-#' @param ps.lty line type
+#' @param model.obj the fitted psychometric function. An object of class \code{\link[stats]{glm}} or \code{\link[brglm]{brglm}}.
+#' @param addTo specifies an existing \code{ggplot} object where the new line should be plotted. If no object is given, the function is drawn on a new plot.
+#' @param showData logical, defines if proportion of binomial responses for each stimulus level are presented. Default is TRUE.
+#' @param ps.type,ps.size type and size of the plotted line (see \code{"ggplot2-spec"}).
+#' @param ps.lab label assigned to the psychometric curve. The label is coded by the color aesthetic. 
 #'
-#' @details \code{PsychShape()} can be used to visualize the predicted results of a
-#' psychophysical experiment or to plot a fitted psychometric function whose
-#' values of pse and jnd are known. Currently only working with probit and logit
-#' link function.
+#' @return \code{PsychPlot} returns a \code{\link[ggplot2]{ggplot}} object. 
 #'
 #' @references
 #' Moscatelli, A., Mezzetti, M., & Lacquaniti, F. (2012). Modeling psychophysical data 
 #' at the population-level: The generalized linear mixed model. 
-#' Journal of Vision, 12(11):26, 1-17. https://doi.org/10.1167/12.11.26
+#' Journal of Vision, 12(11):26, 1-17. doi:10.1167/12.11.26
 #' 
 #' Knoblauch, K., & Maloney, L. T. (2012). Modeling psychophysical data in R (Vol. 32). 
 #' Springer Science & Business Media.
 #'
 #' @seealso \code{\link[stats]{glm}} for for Generalized Linear Models.
 #' \code{\link{PsychFunction}} for estimation of PSE and JND.
+#' \code{\link{MixPlot}} for plotting individual responses from a GLMM.
 #'
 #' @examples
-#' y = c(0,1)
-#' x = c(-40, 40)
-#' plot(y ~ x, type = "n", bty = "n", lab = c(5,3,7))
-#' PsychShape(pse = 0, jnd = 6, x.range = c(-40, 40), ps.col = "gray", ps.lwd = 3)
-#' PsychShape(pse = 6, jnd = 6, x.range = c(-40, 40), ps.col = "black")
-#' PsychShape(pse = 6, jnd = 6, x.range = c(-40, 40), ps.col = "red", ps.link = "logit", ps.lwd = 3)
+#' data.S1 <- subset(simul_data, Subject == "S1")
+#' psych.S1 <- PsychFunction(ps.formula = cbind(Longer, Total - Longer) ~ X, 
+#' ps.link = "probit", ps.data = data.S1)
+#' plotP1 <- PsychPlot(psych.S1$model, showData = TRUE, ps.lab = "S1") 
+#' 
+#' data.S2 <- subset(simul_data, Subject == "S2")
+#' glm.S2 <- glm(formula = cbind(Longer, Total - Longer) ~ X, 
+#'            family = binomial(link = "probit"), data = data.S2)
+#' plotP2 <- PsychPlot(glm.S2, addTo = plotP1, ps.lab = "S2")
 #'
-#' @importFrom stats plogis
+#' @keywords GLM plot
+#' 
+#' @import ggplot2
+#' @importFrom stats predict
+#' 
 #' @export
 #' 
-PsychShape <- function(pse = 0, jnd, x.range = c(NA, NA), ps.link = "probit", ps.col = "black", ps.lwd = 1,
-                       ps.lty = "solid") {
-  x = NA
-  if (ps.link == "probit") {
-    slope = qnorm(0.75) * (1/jnd)
-    curve(expr = pnorm(x, mean = pse, sd = 1/slope), from = x.range[1], to = x.range[2], col = ps.col,
-          add = TRUE, lwd = ps.lwd, lty = ps.lty)
-  } else {
-    if (ps.link == "logit") {
-      slope = log(3) * (1/jnd)
-      curve(expr = plogis(x, location = pse, scale = 1/slope), from = x.range[1], to = x.range[2],
-            col = ps.col, add = TRUE, lwd = ps.lwd, lty = ps.lty)
-    } else {
-      warning("The function only works with probit and logit link function")
-    }
+PsychPlot <- function(model.obj, addTo = NULL, showData = TRUE,
+                      ps.type = "solid", ps.size = 1, ps.lab = ""){
+  if(is.null(addTo)){
+    p <- ggplot()
+  }else{ 
+    p <- addTo}
+  
+  # GLM
+  temp <- names(model.obj$model)
+  xname <- temp[2]
+  
+  data <- model.obj$data
+  data$y <- model.obj$y
+  longData <- data.frame(pretty(data[[xname]], 1000))
+  names(longData) <- xname
+  longData$y <- predict(object = model.obj, newdata = longData, type = "response")
+  
+  plot <- list()
+  
+  plot$ps <- geom_line(inherit.aes = FALSE, data = longData, aes_string(xname, 'y', color = 'ps.lab'), 
+                       linetype = ps.type, size = ps.size)  
+  if(isTRUE(showData)){
+    plot$data <- geom_point(inherit.aes = FALSE, data = data, aes_string(xname, 'y', color = 'ps.lab'))
   }
-  return(0)
+  
+  if(model.obj$family[["link"]] == "probit"){
+    psych <- PsychDelta(model.obj)
+    plot$segment <- geom_segment(inherit.aes = FALSE, data = NULL, 
+                                 aes(x = psych["pse", "Inferior"], xend = psych["pse", "Superior"], 
+                                     y = 0.5, yend = 0.5, color = ps.lab),
+                                 size = ps.size)
+  } 
+  print(p + plot)
+  
 }
+
+#' Plot Psychometric Functions given PSE and JND
+#'
+#' Plot a psychometric function with known PSE and JND on a new or existing \code{ggplot} object.
+#'
+#' @param pse,jnd point of subjective equivalende (PSE) and just noticeable difference (JND) of the desired psychometric function.
+#' @param p probability value relative to the JND upper limit. Default is 0.75 (value for 50\% JND).
+#' @param x.range vector of length two specifying the range of the psychometric function.
+#' @param ps.link a link function for the binomial family of error distribution.
+#' @param ps.type,ps.size,ps.color type, size, and color of the plotted line (see \code{"ggplot2-spec"}).
+#' @param addTo specifies an existing \code{ggplot} object where the new line should be plotted. If no object is given, the function is drawn on a new plot.
+#'
+#' @details \code{PsychShape()} can be used to visualize the predicted results of a
+#' psychophysical experiment or to plot a fitted psychometric function whose
+#' values of pse and jnd are known. Currently only working with probit and logit
+#' link function.
+#' 
+#' @return \code{PsychShape} returns a \code{\link[ggplot2]{ggplot}} object. 
+#'
+#' @references
+#' Moscatelli, A., Mezzetti, M., & Lacquaniti, F. (2012). Modeling psychophysical data 
+#' at the population-level: The generalized linear mixed model. 
+#' Journal of Vision, 12(11):26, 1-17. doi:10.1167/12.11.26
+#' 
+#' Knoblauch, K., & Maloney, L. T. (2012). Modeling psychophysical data in R (Vol. 32). 
+#' Springer Science & Business Media.
+#'
+#' @seealso \code{\link[stats]{glm}} for for Generalized Linear Models.
+#' \code{\link{PsychFunction}} and \code{\link{PsychDelta}} for estimation of PSE and JND from response data.
+#' \code{\link{PsychPlot}} for plotting a a psychometric function from a GLM. 
+#'
+#' @examples
+#' p <- PsychShape(pse = 0, jnd = 6, x.range = c(-40, 40), ps.color = "gray", ps.size = 3)
+#' p1 <- PsychShape(pse = 6, jnd = 6, x.range = c(-40, 40), ps.col = "black", addTo = p)
+#' p2 <- PsychShape(pse = 6, jnd = 6, x.range = c(-40, 40), ps.col = "red", ps.link = "logit", 
+#' ps.type = "dashed", addTo = NULL)
+#'
+#' @import ggplot2
+#' @importFrom stats qnorm pnorm plogis
+#' 
+#' @export
+#' 
+#' @keywords GLM plot
+#' 
+PsychShape <- function(pse = 0, jnd = 1, p = 0.75, x.range = c(NA, NA), ps.link = c("probit"), 
+                       ps.type = "solid", ps.size = 1, ps.color = "black", addTo = NULL) {
+  if(is.null(addTo)){
+    pl <- ggplot()
+  }else{ 
+    pl <- addTo}
+  
+  x = pretty(x.range, 100)
+  if (ps.link == "probit") {
+    slope = qnorm(p) * (1/jnd)
+    y <- pnorm(x, mean = pse, sd = 1/slope)
+    
+  } else if (ps.link == "logit") {
+    slope = log(3) * (1/jnd)
+    y = plogis(x, location = pse, scale = 1/slope)
+  } else {
+    warning("The function only works with probit and logit link function")
+  }
+  data <- data.frame(x,y)
+  plot <- list()
+  plot$ps <- geom_line(inherit.aes = FALSE, data = data, aes_string("x", "y"), 
+                       linetype = ps.type, size = ps.size, color = ps.color)  
+  
+  print(pl + plot)
+}
+

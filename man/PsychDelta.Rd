@@ -2,29 +2,32 @@
 % Please edit documentation in R/psych_utils.R
 \name{PsychDelta}
 \alias{PsychDelta}
-\title{PSE/JND for univariable GLM Using Delta Method}
+\title{PSE/JND from GLM Using Delta Method}
 \usage{
-PsychDelta(model, alpha = 0.05)
+PsychDelta(model.obj, alpha = 0.05, p = 0.75)
 }
 \arguments{
-\item{model}{the fitted psychometric function. An object of class \code{"glm"}.}
+\item{model.obj}{the fitted psychometric function. An object of class \code{\link[stats]{glm}}.}
 
-\item{alpha}{significance level of the confidence interval.}
+\item{alpha}{significance level of the confidence interval.Default is 0.05 (95\% confidence interval).}
+
+\item{p}{probability value relative to the JND upper limit. Default is 0.75 (value for 50\% JND).}
 }
 \value{
-\code{PsychDelta} returns a matrix including Estimate, Standard Error,
-Inferior and Superior Confidence Interval of PSE and JND. Confidence Intervals
+\code{PsychDelta} returns a matrix including estimate, standard error,
+inferior and superior bounds of the confidence interval of PSE and JND. Confidence Intervals
 are computed as: \eqn{Estimate +/- z(1-(\alpha/2)) * Std.Error}.
 }
 \description{
-Estimate the Point of Subjective Equivalence (PSE), the Just Noticeable
-Difference (JND) and the related Standard Errors by means of Delta Method.
-The method only applies to univariable GLMs (psychometric functions) having
-a \emph{probit} link function.
+Estimate Point of Subjective Equivalence (PSE), Just Noticeable
+Difference (JND), and related Standard Errors of an individual participant 
+by means of Delta Method.
+The method only applies to a GLM (object of class \code{\link[stats]{glm}}) with one continuous 
+predictor and a \emph{probit} link function.
 }
 \details{
-\code{PsychDelta} estimates PSE and JND of a univariable psychometric
-function (object of class \code{"glm"}).
+\code{PsychDelta} estimates PSE and JND of a psychometric
+function (object of class \code{glm}).
 }
 \note{
 The function assumes that the first model coefficient is the intercept
@@ -32,11 +35,9 @@ and the second is the slope. The estimate of the JND assumes a \emph{probit}
 link function.
 }
 \examples{
-#load simulated data
-data(simul_data)
-#fit a glm (probit link)
+data.S1 <- subset(simul_data, Subject == "S1")
 model.glm = glm(formula = cbind(Longer, Total - Longer) ~ X,
-family = binomial(link = "probit"), data = simul_data)
+family = binomial(link = "probit"), data = data.S1)
 PsychDelta(model.glm)
 
 }
@@ -44,18 +45,17 @@ PsychDelta(model.glm)
 Faraggi, D., Izikson, P., & Reiser, B. (2003). Confidence intervals for the 50 per cent 
 response dose. Statistics in medicine, 22(12), 1977-1988. https://doi.org/10.1002/sim.1368
 
+Knoblauch, K., & Maloney, L. T. (2012). Modeling psychophysical data in R (Vol. 32). 
+Springer Science & Business Media.
+
 Moscatelli, A., Mezzetti, M., & Lacquaniti, F. (2012). Modeling psychophysical data 
 at the population-level: The generalized linear mixed model. 
-Journal of Vision, 12(11):26, 1-17. https://doi.org/10.1167/12.11.26
+Journal of Vision, 12(11):26, 1-17. doi:10.1167/12.11.26
 }
 \seealso{
-\code{\link[stats]{glm}} for for Generalized Linear Models (without
-random effects) and \code{\link[lme4]{glmer}} for Generalized Linear Mixed
-Models (including random effects). \code{MixDelta} and \code{MixTreatment}
-for univarible and multivariable GLMM, respectively (object of class
-\code{"\linkS4class{merMod}"}). \code{\link{pseMer}} for bootstrap-based
-confidence intervals.
+\code{\link[stats]{glm}} for fitting a Generalized Linear Model to a single-subject response. \code{\link[lme4]{glmer}} 
+for Generalized Linear Mixed Models (including fixed and random effects). \code{MixDelta} for estimating PSE and JND at a population level 
+with delta method.
 }
 \keyword{DeltaMethod}
 \keyword{GLM}
-\keyword{Univariable}

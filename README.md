@@ -3,4 +3,10 @@ The aim of the MixedPsy project is to provide statistical tools (such as R codes
 
 19 April 2010
 Work In Progress.
-See https://mixedpsychophysics.wordpress.com/ for a stable relase and documentation.
+See https://mixedpsychophysics.wordpress.com/ for a stable release and documentation.
+
+07 November 2017
+MixedPsy 1.0.0 released on CRAN
+
+07 November 2021
+Version 1.1.0 released
