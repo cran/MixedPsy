@@ -1,5 +1,5 @@
 Package: MixedPsy
-Version: 1.1.0
+Version: 1.2.0
 Title: Statistical Tools for the Analysis of Psychophysical Data
 Authors@R: c(
     person("Alessandro", "Moscatelli", email = "moskante@gmail.com", role = c("aut","cre"), comment = c(ORCID = "0000-0001-6269-4536")),
@@ -13,14 +13,15 @@ Description: Tools for the analysis of psychophysical data in R. This package al
     Additionally, the package allows plotting the fitted models and the response data, simulating psychometric functions of different shapes, and simulating data sets.
     For a description of the use of GLMMs applied to psychophysical data, refer to Moscatelli et al. (2012).
 Depends: R (>= 3.5.0)
-Imports: beepr, boot, brglm, lme4, Matrix, mnormt, ggplot2
+Imports: beepr, boot, brglm, lme4, Matrix, mnormt, ggplot2, magrittr,
+        dplyr, purrr, rlang, tidyselect
 LazyData: true
 License: GPL (>= 2)
 URL: https://mixedpsychophysics.wordpress.com
 BugReports: https://github.com/moskante/MixedPsy/issues
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.1
 NeedsCompilation: no
-Packaged: 2021-11-08 15:18:09 UTC; priscilla
+Packaged: 2025-02-18 14:30:56 UTC; priscilla
 Repository: CRAN
-Date/Publication: 2021-11-08 15:50:05 UTC
+Date/Publication: 2025-02-18 23:40:18 UTC
