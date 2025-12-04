@@ -1,9 +1,9 @@
-d52b062478c2004d74fb24d2ee38c104 *DESCRIPTION
-c9a63ce020e9c54b9f49f807aebf44d2 *NAMESPACE
-1deef5907cbb4b6407f07dfa9647e41c *NEWS.md
+9202c55e56266a233438dd8eddceea5f *DESCRIPTION
+ace5f1397ff5e65599fd983cebe7dc5f *NAMESPACE
+e85235755e3bef9cb6bca17e8ca3a803 *NEWS.md
 b1caa5954ae978c1023a6c67ce04b316 *R/PsySimulate.R
 ed266ef2206d4c4e9a088d6734b73a22 *R/data.R
-af615f57031ce3c2e25d4223316a49e6 *R/mix_utils.R
+5b1537d204eb6d7bec9b2ec7856f8f81 *R/mix_utils.R
 6b7ee58f5cfaaccedfed8f113b66fe9a *R/psych_utils.R
 805006c647e9bf7fe9483a4927372aee *R/psych_utils_multi.R
 3b304818c4cfad92bbf066f53945ddbd *R/xplode.R
@@ -13,6 +13,7 @@ e340abea2e22c257de2b158e52139050 *README.md
 cd8be7b54b3eb9ada04ae37b1313b5ae *data/vibro_exp3.RData
 c8923f147ba9c53c11e5e6d45a950b5c *inst/CITATION
 bab8f24c9d8f266e3053d49e00b6ee98 *man/MixDelta.Rd
+9e821171df6658b25a7787c7adcae777 *man/MixInterpolate.Rd
 26a57e1bec2d110e480e7bd0c3e328eb *man/MixPlot.Rd
 d2f99ddc710c16f86e84575f0e0eb157 *man/PsySimulate.Rd
 e49cef05392e55a3f54a27ca2a02c6b1 *man/PsychDelta.Rd
